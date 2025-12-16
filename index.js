@@ -1,32 +1,40 @@
-const jsonfile = require('jsonfile');
-const moment = require('moment');
-const simpleGit = require('simple-git');
+import jsonfile from "jsonfile";
+import moment from "moment";
+import simpleGit from "simple-git";
+import random from "random";
 
-const path = './data.json';
+const path = "./data.json";
 
-const markCommit = async (x, y) => {
-    // Calculate the target date
-    const date = moment()
-        .subtract(1, 'year')
-        .add(1, 'day')
-        .add(x, 'week')
-        .add(y, 'day')
-        .format('YYYY-MM-DD');
+const markCommit = (x, y) => {
+  const date = moment()
+    .subtract(1, "y")
+    .add(1, "d")
+    .add(x, "w")
+    .add(y, "d")
+    .format();
 
-    const data = {
-        date: date,
-    };
+  const data = {
+    date: date,
+  };
 
-    try {
-        await jsonfile.writeFile(path, data);
-        const git = simpleGit();
-        await git.add([path]);
-        await git.commit(`Commit for date: ${date}`, undefined, { '--date': date });
-        await git.push();
-        console.log(`Committed and pushed for date: ${date}`);
-    } catch (err) {
-        console.error('Error during commit operation:', err);
-    }
+  jsonfile.writeFile(path, data, () => {
+    simpleGit().add([path]).commit(date, { "--date": date }).push();
+  });
 };
 
-module.exports = markCommit;
+const makeCommits = (n) => {
+  if(n===0) return simpleGit().push();
+  const x = random.int(0, 54);
+  const y = random.int(0, 6);
+  const date = moment().subtract(1, "y").add(1, "d").add(x, "w").add(y, "d").format();
+
+  const data = {
+    date: date,
+  };
+  console.log(date);
+  jsonfile.writeFile(path, data, () => {
+    simpleGit().add([path]).commit(date, { "--date": date },makeCommits.bind(this,--n));
+  });
+};
+
+makeCommits(100);
